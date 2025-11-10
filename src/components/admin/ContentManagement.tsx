@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLessons } from "@/hooks/useLessons";
+import { useAssessments } from "@/hooks/useAssessments";
 import {
   Table,
   TableBody,
@@ -33,68 +35,29 @@ export function ContentManagement() {
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; item?: any; type?: string }>({ open: false });
   const { toast } = useToast();
 
-  const lessons = [
-    {
-      id: 1,
-      title: "TOEIC Listening Part 1: Photos",
-      type: "listening",
-      level: "A1",
-      status: "published",
-      questions: 20,
-      duration: "30 phút",
-      created: "2024-03-01"
-    },
-    {
-      id: 2,
-      title: "TOEIC Reading Part 5: Grammar",
-      type: "reading",
-      level: "A2",
-      status: "draft",
-      questions: 25,
-      duration: "45 phút",
-      created: "2024-03-05"
-    },
-    {
-      id: 3,
-      title: "TOEIC Writing Task 1: Email",
-      type: "writing",
-      level: "B1",
-      status: "published",
-      questions: 10,
-      duration: "60 phút",
-      created: "2024-03-08"
-    },
-  ];
+  const { lessons: lessonsData, isLoading: lessonsLoading, deleteLesson } = useLessons();
+  const { assessments: assessmentsData, isLoading: assessmentsLoading, deleteAssessment } = useAssessments();
 
-  const assessments = [
-    {
-      id: 1,
-      title: "TOEIC Practice Test A1",
-      level: "A1",
-      status: "active",
-      attempts: 145,
-      avgScore: 650,
-      created: "2024-02-15"
-    },
-    {
-      id: 2,
-      title: "TOEIC Practice Test A2",
-      level: "A2",
-      status: "active",
-      attempts: 89,
-      avgScore: 720,
-      created: "2024-02-20"
-    },
-    {
-      id: 3,
-      title: "TOEIC Practice Test B1",
-      level: "B1",
-      status: "inactive",
-      attempts: 67,
-      avgScore: 780,
-      created: "2024-02-25"
-    },
-  ];
+  const lessons = (lessonsData || []).map(lesson => ({
+    id: lesson.id,
+    title: lesson.title,
+    type: lesson.type || "reading",
+    level: lesson.level || "A1",
+    status: lesson.status || "draft",
+    questions: 0,
+    duration: lesson.duration || "30 phút",
+    created_at: lesson.created_at,
+  }));
+
+  const assessments = (assessmentsData || []).map(assessment => ({
+    id: assessment.id,
+    title: assessment.title,
+    level: assessment.level || "A1",
+    status: assessment.status || "active",
+    attempts: 0,
+    avgScore: 0,
+    created_at: assessment.created_at,
+  }));
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -155,11 +118,19 @@ export function ContentManagement() {
     }
   };
 
-  const handleConfirmDelete = () => {
-    toast({
-      title: "Xóa thành công",
-      description: `Đã xóa ${deleteDialog.type} "${deleteDialog.item?.title}"`,
-    });
+  const handleConfirmDelete = async () => {
+    if (!deleteDialog.item) return;
+    
+    try {
+      if (deleteDialog.type === "bài học") {
+        await deleteLesson.mutateAsync(deleteDialog.item.id);
+      } else if (deleteDialog.type === "đề thi") {
+        await deleteAssessment.mutateAsync(deleteDialog.item.id);
+      }
+      setDeleteDialog({ open: false });
+    } catch (error) {
+      // Error handled by mutation
+    }
   };
 
   const handleCopyContent = (item: any, type: string) => {
@@ -230,22 +201,31 @@ export function ContentManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredLessons.map((lesson) => (
+                  {lessonsLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center">Đang tải...</TableCell>
+                    </TableRow>
+                  ) : filteredLessons.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center">Chưa có bài học nào</TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredLessons.map((lesson) => (
                     <TableRow key={lesson.id}>
                       <TableCell className="font-medium">{lesson.title}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {getTypeIcon(lesson.type)}
+                          {getTypeIcon(lesson.type || "reading")}
                           <span className="capitalize">{lesson.type}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">{lesson.level}</Badge>
                       </TableCell>
-                      <TableCell>{lesson.questions}</TableCell>
+                      <TableCell>-</TableCell>
                       <TableCell>{lesson.duration}</TableCell>
-                      <TableCell>{getStatusBadge(lesson.status)}</TableCell>
-                      <TableCell>{lesson.created}</TableCell>
+                      <TableCell>{getStatusBadge(lesson.status || "draft")}</TableCell>
+                      <TableCell>{new Date(lesson.created_at).toLocaleDateString('vi-VN')}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -277,7 +257,8 @@ export function ContentManagement() {
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -309,16 +290,25 @@ export function ContentManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAssessments.map((assessment) => (
+                  {assessmentsLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center">Đang tải...</TableCell>
+                    </TableRow>
+                  ) : filteredAssessments.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center">Chưa có đề thi nào</TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredAssessments.map((assessment) => (
                     <TableRow key={assessment.id}>
                       <TableCell className="font-medium">{assessment.title}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{assessment.level}</Badge>
                       </TableCell>
-                      <TableCell>{assessment.attempts}</TableCell>
-                      <TableCell>{assessment.avgScore}</TableCell>
-                      <TableCell>{getStatusBadge(assessment.status)}</TableCell>
-                      <TableCell>{assessment.created}</TableCell>
+                      <TableCell>-</TableCell>
+                      <TableCell>-</TableCell>
+                      <TableCell>{getStatusBadge(assessment.status || "active")}</TableCell>
+                      <TableCell>{new Date(assessment.created_at).toLocaleDateString('vi-VN')}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -347,7 +337,8 @@ export function ContentManagement() {
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>

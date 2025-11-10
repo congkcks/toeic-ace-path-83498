@@ -7,6 +7,7 @@ import { UserManagement } from "@/components/admin/UserManagement";
 import { ContentManagement } from "@/components/admin/ContentManagement";
 import { Analytics } from "@/components/admin/Analytics";
 import { SystemSettings } from "@/components/admin/SystemSettings";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -29,20 +30,22 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <SidebarProvider>
-        <div className="flex min-h-screen w-full">
-          <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-          
-          <div className="flex-1 flex flex-col">
-            <AdminHeader />
-            <main className="flex-1 p-6">
-              {renderContent()}
-            </main>
+    <ProtectedRoute requireAdmin>
+      <div className="min-h-screen bg-background">
+        <SidebarProvider>
+          <div className="flex min-h-screen w-full">
+            <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+            
+            <div className="flex-1 flex flex-col">
+              <AdminHeader />
+              <main className="flex-1 p-6">
+                {renderContent()}
+              </main>
+            </div>
           </div>
-        </div>
-      </SidebarProvider>
-    </div>
+        </SidebarProvider>
+      </div>
+    </ProtectedRoute>
   );
 };
 

@@ -24,6 +24,7 @@ import SpeakingChallengePage from "./pages/SpeakingChallengePage";
 import CoursesPage from "./pages/CoursesPage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import LessonDetailPage from "./pages/LessonDetailPage";
+import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<AuthPage />} />
           <Route path="/study-plan" element={<StudyPlan />} />
           <Route path="/assessment" element={<Assessment />} />
           <Route path="/dashboard" element={<DashboardPage />} />
