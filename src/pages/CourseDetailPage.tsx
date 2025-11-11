@@ -2,18 +2,20 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { courseApi } from "@/services/api";
 import type { CourseDetail } from "@/types/course";
+import { useUserData } from "@/hooks/useUserData";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { BookOpen, PlayCircle, Loader2, ArrowLeft } from "lucide-react";
+import { BookOpen, PlayCircle, Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 const CourseDetailPage = () => {
   const { courseId } = useParams();
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const { getLessonProgress, calculateProgress } = useUserData();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,6 +61,9 @@ const CourseDetailPage = () => {
     );
   }
 
+  const totalLessons = course.modules.reduce((acc, m) => acc + m.lessons.length, 0);
+  const courseProgress = calculateProgress(totalLessons);
+
   return (
     <div className="min-h-screen">
       <Header />
@@ -77,8 +82,8 @@ const CourseDetailPage = () => {
             <CardHeader>
               <CardTitle className="text-3xl">{course.name}</CardTitle>
               <CardDescription>
-                {course.modules.length} modules với{" "}
-                {course.modules.reduce((acc, m) => acc + m.lessons.length, 0)} bài học
+                {course.modules.length} modules với {totalLessons} bài học
+                {courseProgress > 0 && ` • ${courseProgress}% hoàn thành`}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -106,21 +111,41 @@ const CourseDetailPage = () => {
                       {module.lessons.length === 0 ? (
                         <p className="text-muted-foreground text-sm">Chưa có bài học</p>
                       ) : (
-                        module.lessons.map((lesson) => (
-                          <Card
-                            key={lesson.id}
-                            className="hover:bg-accent transition-colors cursor-pointer"
-                            onClick={() => navigate(`/lessons/${lesson.id}`)}
-                          >
-                            <CardContent className="p-4 flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <PlayCircle className="h-5 w-5 text-primary" />
-                                <span>{lesson.title}</span>
-                              </div>
-                              <Button size="sm">Học ngay</Button>
-                            </CardContent>
-                          </Card>
-                        ))
+                        module.lessons.map((lesson) => {
+                          const lessonProgress = getLessonProgress(lesson.id);
+                          const isCompleted = lessonProgress?.completed || false;
+                          
+                          return (
+                            <Card
+                              key={lesson.id}
+                              className="hover:bg-accent transition-colors cursor-pointer"
+                              onClick={() => navigate(`/lessons/${lesson.id}`)}
+                            >
+                              <CardContent className="p-4 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  {isCompleted ? (
+                                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                                  ) : (
+                                    <PlayCircle className="h-5 w-5 text-primary" />
+                                  )}
+                                  <div>
+                                    <span className={isCompleted ? "text-muted-foreground" : ""}>
+                                      {lesson.title}
+                                    </span>
+                                    {isCompleted && lessonProgress.score && (
+                                      <span className="text-xs text-green-600 ml-2">
+                                        ({lessonProgress.score}%)
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <Button size="sm" variant={isCompleted ? "outline" : "default"}>
+                                  {isCompleted ? "Xem lại" : "Học ngay"}
+                                </Button>
+                              </CardContent>
+                            </Card>
+                          );
+                        })
                       )}
                     </div>
                   </AccordionContent>
