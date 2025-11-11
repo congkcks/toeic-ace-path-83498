@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { courseApi } from "@/services/api";
 import type { Course, CourseDetail } from "@/types/course";
+import { useUserData } from "@/hooks/useUserData";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,15 +16,17 @@ import {
   Award,
   Target,
   Clock,
-  TrendingUp
+  TrendingUp,
+  User
 } from "lucide-react";
 import { toast } from "sonner";
 
-const DashboardPage = () => {
+const DashboardPageContent = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [courseDetails, setCourseDetails] = useState<CourseDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { profile, stats, goals, achievements, loading: userDataLoading, getCompletedLessonsCount } = useUserData();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -52,21 +56,39 @@ const DashboardPage = () => {
     return courseDetails.reduce((total, course) => total + (course.modules?.length || 0), 0);
   };
 
+  const completedLessons = getCompletedLessonsCount();
+  const isLoading = loading || userDataLoading;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       <Header />
       <main className="container mx-auto px-6 py-12">
         {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-eng-navy mb-2">
-            Dashboard
-          </h1>
-          <p className="text-muted-foreground">
-            Theo dõi tiến trình học tập của bạn
-          </p>
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            {profile?.avatar_url ? (
+              <img 
+                src={profile.avatar_url} 
+                alt="Avatar" 
+                className="w-12 h-12 rounded-full"
+              />
+            ) : (
+              <div className="w-12 h-12 bg-eng-pink/10 rounded-full flex items-center justify-center">
+                <User className="w-6 h-6 text-eng-pink" />
+              </div>
+            )}
+            <div>
+              <h1 className="text-4xl font-bold text-eng-navy">
+                Xin chào, {profile?.full_name || 'Học viên'}!
+              </h1>
+              <p className="text-muted-foreground">
+                Theo dõi tiến trình học tập của bạn
+              </p>
+            </div>
+          </div>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <div className="flex justify-center items-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-eng-pink" />
           </div>
@@ -102,8 +124,8 @@ const DashboardPage = () => {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Tiến độ</p>
-                      <p className="text-2xl font-bold text-eng-success">0%</p>
+                      <p className="text-sm font-medium text-muted-foreground">Bài học hoàn thành</p>
+                      <p className="text-2xl font-bold text-eng-success">{completedLessons}</p>
                     </div>
                     <TrendingUp className="w-8 h-8 text-eng-success" />
                   </div>
@@ -115,7 +137,9 @@ const DashboardPage = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Thời gian học</p>
-                      <p className="text-2xl font-bold text-eng-warning">0 giờ</p>
+                      <p className="text-2xl font-bold text-eng-warning">
+                        {stats?.total_study_hours?.toFixed(1) || 0} giờ
+                      </p>
                     </div>
                     <Clock className="w-8 h-8 text-eng-warning" />
                   </div>
@@ -188,21 +212,26 @@ const DashboardPage = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-medium">Hoàn thành khóa học</span>
-                          <span className="text-sm text-muted-foreground">0/{courses.length}</span>
-                        </div>
-                        <Progress value={0} className="h-2" />
-                      </div>
-
-                      <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-medium">Học mỗi ngày</span>
-                          <span className="text-sm text-muted-foreground">0 ngày</span>
-                        </div>
-                        <Progress value={0} className="h-2" />
-                      </div>
+                      {goals.map((goal) => {
+                        const progress = goal.target_value > 0 
+                          ? (goal.current_value / goal.target_value) * 100 
+                          : 0;
+                        const displayName = goal.goal_type === 'daily_streak' 
+                          ? 'Học mỗi ngày' 
+                          : 'Hoàn thành bài học';
+                        
+                        return (
+                          <div key={goal.id}>
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-sm font-medium">{displayName}</span>
+                              <span className="text-sm text-muted-foreground">
+                                {goal.current_value}/{goal.target_value}
+                              </span>
+                            </div>
+                            <Progress value={progress} className="h-2" />
+                          </div>
+                        );
+                      })}
                     </div>
                   </CardContent>
                 </Card>
@@ -245,12 +274,30 @@ const DashboardPage = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-center py-6">
-                      <Award className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                      <p className="text-sm text-muted-foreground">
-                        Bắt đầu học để mở khóa thành tích
-                      </p>
-                    </div>
+                    {achievements.length === 0 ? (
+                      <div className="text-center py-6">
+                        <Award className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                        <p className="text-sm text-muted-foreground">
+                          Bắt đầu học để mở khóa thành tích
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {achievements.slice(0, 5).map((achievement) => (
+                          <div key={achievement.id} className="flex items-start gap-3 p-3 bg-background/50 rounded-lg">
+                            <Award className="w-5 h-5 text-eng-pink mt-0.5" />
+                            <div className="flex-1">
+                              <h4 className="font-medium text-sm">{achievement.title}</h4>
+                              {achievement.description && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {achievement.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -260,6 +307,14 @@ const DashboardPage = () => {
       </main>
       <Footer />
     </div>
+  );
+};
+
+const DashboardPage = () => {
+  return (
+    <ProtectedRoute>
+      <DashboardPageContent />
+    </ProtectedRoute>
   );
 };
 

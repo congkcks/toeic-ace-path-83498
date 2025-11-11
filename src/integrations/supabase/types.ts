@@ -300,6 +300,63 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achievement_type: string
+          description: string | null
+          earned_at: string | null
+          id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          achievement_type: string
+          description?: string | null
+          earned_at?: string | null
+          id?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          achievement_type?: string
+          description?: string | null
+          earned_at?: string | null
+          id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_goals: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          current_value: number | null
+          goal_type: string
+          id: string
+          target_value: number
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          current_value?: number | null
+          goal_type: string
+          id?: string
+          target_value: number
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          current_value?: number | null
+          goal_type?: string
+          id?: string
+          target_value?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_progress: {
         Row: {
           completed: boolean | null
@@ -355,6 +412,45 @@ export type Database = {
           created_at?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_study_stats: {
+        Row: {
+          completed_lessons: number | null
+          created_at: string | null
+          current_streak: number | null
+          id: string
+          last_study_date: string | null
+          longest_streak: number | null
+          predicted_score: number | null
+          total_study_hours: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_lessons?: number | null
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          last_study_date?: string | null
+          longest_streak?: number | null
+          predicted_score?: number | null
+          total_study_hours?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_lessons?: number | null
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          last_study_date?: string | null
+          longest_streak?: number | null
+          predicted_score?: number | null
+          total_study_hours?: number | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
