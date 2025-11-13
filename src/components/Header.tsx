@@ -1,21 +1,8 @@
-import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, isAdmin, signOut } = useAuth();
-  const navigate = useNavigate();
-
-  const handleAuth = () => {
-    if (user) {
-      signOut();
-    } else {
-      navigate("/auth");
-    }
-  };
 
   return (
     <header className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
@@ -34,22 +21,6 @@ const Header = () => {
             <a href="/" className="text-foreground hover:text-eng-pink transition-colors">Trang chủ</a>
             <a href="/courses" className="text-foreground hover:text-eng-pink transition-colors">Khóa học</a>
             <a href="/dashboard" className="text-foreground hover:text-eng-pink transition-colors">Dashboard</a>
-            {isAdmin && (
-              <a href="/admin" className="text-foreground hover:text-eng-pink transition-colors">Admin</a>
-            )}
-            <Button onClick={handleAuth} variant="outline" size="sm">
-              {user ? (
-                <>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Đăng xuất
-                </>
-              ) : (
-                <>
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Đăng nhập
-                </>
-              )}
-            </Button>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -68,22 +39,6 @@ const Header = () => {
               <a href="/" className="text-foreground hover:text-eng-pink transition-colors">Trang chủ</a>
               <a href="/courses" className="text-foreground hover:text-eng-pink transition-colors">Khóa học</a>
               <a href="/dashboard" className="text-foreground hover:text-eng-pink transition-colors">Dashboard</a>
-              {isAdmin && (
-                <a href="/admin" className="text-foreground hover:text-eng-pink transition-colors">Admin</a>
-              )}
-              <Button onClick={handleAuth} variant="outline" size="sm" className="w-full">
-                {user ? (
-                  <>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Đăng xuất
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Đăng nhập
-                  </>
-                )}
-              </Button>
             </nav>
           </div>
         )}

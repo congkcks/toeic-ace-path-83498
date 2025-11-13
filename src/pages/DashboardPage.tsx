@@ -1,9 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { courseApi } from "@/services/api";
-import type { Course, CourseDetail } from "@/types/course";
-import { useUserData } from "@/hooks/useUserData";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import type { Course } from "@/types/course";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,43 +19,38 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const DashboardPageContent = () => {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [courseDetails, setCourseDetails] = useState<CourseDetail[]>([]);
-  const [loading, setLoading] = useState(true);
+const DashboardPage = () => {
   const navigate = useNavigate();
-  const { profile, stats, goals, achievements, loading: userDataLoading, getCompletedLessonsCount } = useUserData();
+  const [loading] = useState(false);
+  
+  // Mock data
+  const profile = {
+    full_name: "Học viên",
+    avatar_url: null
+  };
+  
+  const stats = {
+    current_streak: 0,
+    predicted_score: 0,
+    completed_lessons: 0,
+    total_study_hours: 0
+  };
+  
+  const goals = [
+    { id: 1, goal_type: "daily_streak", current_value: 0, target_value: 30, completed: false },
+    { id: 2, goal_type: "completed_lessons", current_value: 0, target_value: 100, completed: false }
+  ];
+  
+  const achievements: any[] = [];
+  
+  const courses: Course[] = [];
+  const courseDetails: any[] = [];
+  
+  const completedLessons = 0;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const coursesData = await courseApi.getCourses();
-        setCourses(coursesData);
-        
-        // Fetch details for each course
-        const detailsPromises = coursesData.map(course => 
-          courseApi.getCourseDetail(course.id).catch(() => null)
-        );
-        const details = await Promise.all(detailsPromises);
-        setCourseDetails(details.filter((d): d is CourseDetail => d !== null));
-      } catch (error) {
-        toast.error("Không thể tải dữ liệu");
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  // Calculate total modules across all courses
   const getTotalModules = () => {
     return courseDetails.reduce((total, course) => total + (course.modules?.length || 0), 0);
   };
-
-  const completedLessons = getCompletedLessonsCount();
-  const isLoading = loading || userDataLoading;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
@@ -88,7 +81,7 @@ const DashboardPageContent = () => {
           </div>
         </div>
 
-        {isLoading ? (
+        {loading ? (
           <div className="flex justify-center items-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-eng-pink" />
           </div>
@@ -161,41 +154,51 @@ const DashboardPageContent = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {courses.map((course) => {
-                      const detail = courseDetails.find(d => d.id === course.id);
-                      const moduleCount = detail?.modules?.length || 0;
-                      
-                      return (
-                        <div 
-                          key={course.id} 
-                          className="flex items-center justify-between p-4 bg-background/50 rounded-lg hover:bg-background/80 transition-colors"
-                        >
-                          <div className="flex items-center space-x-4 flex-1">
-                            <div className="w-12 h-12 bg-eng-pink/10 rounded-lg flex items-center justify-center">
-                              <BookOpen className="w-6 h-6 text-eng-pink" />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-eng-navy">{course.name}</h4>
-                              <p className="text-sm text-muted-foreground">
-                                {moduleCount} Module
-                              </p>
-                              <div className="mt-2">
-                                <Progress value={0} className="h-2" />
-                                <p className="text-xs text-muted-foreground mt-1">0% hoàn thành</p>
+                    {courses.length === 0 ? (
+                      <div className="text-center py-8">
+                        <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                        <p className="text-muted-foreground mb-4">Chưa có khóa học nào</p>
+                        <Button onClick={() => navigate('/courses')}>
+                          Xem khóa học
+                        </Button>
+                      </div>
+                    ) : (
+                      courses.map((course) => {
+                        const detail = courseDetails.find(d => d.id === course.id);
+                        const moduleCount = detail?.modules?.length || 0;
+                        
+                        return (
+                          <div 
+                            key={course.id} 
+                            className="flex items-center justify-between p-4 bg-background/50 rounded-lg hover:bg-background/80 transition-colors"
+                          >
+                            <div className="flex items-center space-x-4 flex-1">
+                              <div className="w-12 h-12 bg-eng-pink/10 rounded-lg flex items-center justify-center">
+                                <BookOpen className="w-6 h-6 text-eng-pink" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-eng-navy">{course.name}</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {moduleCount} Module
+                                </p>
+                                <div className="mt-2">
+                                  <Progress value={0} className="h-2" />
+                                  <p className="text-xs text-muted-foreground mt-1">0% hoàn thành</p>
+                                </div>
                               </div>
                             </div>
+                            <Button 
+                              variant="hero"
+                              onClick={() => navigate(`/courses/${course.id}`)}
+                              className="ml-4"
+                            >
+                              <PlayCircle className="w-4 h-4 mr-2" />
+                              Học ngay
+                            </Button>
                           </div>
-                          <Button 
-                            variant="hero"
-                            onClick={() => navigate(`/courses/${course.id}`)}
-                            className="ml-4"
-                          >
-                            <PlayCircle className="w-4 h-4 mr-2" />
-                            Học ngay
-                          </Button>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -307,14 +310,6 @@ const DashboardPageContent = () => {
       </main>
       <Footer />
     </div>
-  );
-};
-
-const DashboardPage = () => {
-  return (
-    <ProtectedRoute>
-      <DashboardPageContent />
-    </ProtectedRoute>
   );
 };
 

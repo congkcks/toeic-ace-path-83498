@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useLessons } from "@/hooks/useLessons";
-import { useAssessments } from "@/hooks/useAssessments";
 import {
   Table,
   TableBody,
@@ -35,29 +33,31 @@ export function ContentManagement() {
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; item?: any; type?: string }>({ open: false });
   const { toast } = useToast();
 
-  const { lessons: lessonsData, isLoading: lessonsLoading, deleteLesson } = useLessons();
-  const { assessments: assessmentsData, isLoading: assessmentsLoading, deleteAssessment } = useAssessments();
+  // Mock data
+  const lessons = [
+    {
+      id: 1,
+      title: "Bài học mẫu 1",
+      type: "reading",
+      level: "Beginner",
+      status: "published",
+      questions: 10,
+      duration: "30 phút",
+      created_at: new Date().toISOString()
+    }
+  ];
 
-  const lessons = (lessonsData || []).map(lesson => ({
-    id: lesson.id,
-    title: lesson.title,
-    type: lesson.type || "reading",
-    level: lesson.level || "A1",
-    status: lesson.status || "draft",
-    questions: 0,
-    duration: lesson.duration || "30 phút",
-    created_at: lesson.created_at,
-  }));
-
-  const assessments = (assessmentsData || []).map(assessment => ({
-    id: assessment.id,
-    title: assessment.title,
-    level: assessment.level || "A1",
-    status: assessment.status || "active",
-    attempts: 0,
-    avgScore: 0,
-    created_at: assessment.created_at,
-  }));
+  const assessments = [
+    {
+      id: 1,
+      title: "Đề thi mẫu 1",
+      level: "Intermediate",
+      status: "active",
+      attempts: 0,
+      avgScore: 0,
+      created_at: new Date().toISOString()
+    }
+  ];
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -121,16 +121,11 @@ export function ContentManagement() {
   const handleConfirmDelete = async () => {
     if (!deleteDialog.item) return;
     
-    try {
-      if (deleteDialog.type === "bài học") {
-        await deleteLesson.mutateAsync(deleteDialog.item.id);
-      } else if (deleteDialog.type === "đề thi") {
-        await deleteAssessment.mutateAsync(deleteDialog.item.id);
-      }
-      setDeleteDialog({ open: false });
-    } catch (error) {
-      // Error handled by mutation
-    }
+    toast({
+      title: "Đã xóa",
+      description: `Đã xóa ${deleteDialog.type} "${deleteDialog.item.title}"`,
+    });
+    setDeleteDialog({ open: false });
   };
 
   const handleCopyContent = (item: any, type: string) => {
@@ -201,11 +196,7 @@ export function ContentManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {lessonsLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center">Đang tải...</TableCell>
-                    </TableRow>
-                  ) : filteredLessons.length === 0 ? (
+                  {filteredLessons.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={8} className="text-center">Chưa có bài học nào</TableCell>
                     </TableRow>
@@ -222,7 +213,7 @@ export function ContentManagement() {
                       <TableCell>
                         <Badge variant="outline">{lesson.level}</Badge>
                       </TableCell>
-                      <TableCell>-</TableCell>
+                      <TableCell>{lesson.questions}</TableCell>
                       <TableCell>{lesson.duration}</TableCell>
                       <TableCell>{getStatusBadge(lesson.status || "draft")}</TableCell>
                       <TableCell>{new Date(lesson.created_at).toLocaleDateString('vi-VN')}</TableCell>
@@ -290,11 +281,7 @@ export function ContentManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {assessmentsLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center">Đang tải...</TableCell>
-                    </TableRow>
-                  ) : filteredAssessments.length === 0 ? (
+                  {filteredAssessments.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center">Chưa có đề thi nào</TableCell>
                     </TableRow>
@@ -305,8 +292,8 @@ export function ContentManagement() {
                       <TableCell>
                         <Badge variant="outline">{assessment.level}</Badge>
                       </TableCell>
-                      <TableCell>-</TableCell>
-                      <TableCell>-</TableCell>
+                      <TableCell>{assessment.attempts}</TableCell>
+                      <TableCell>{assessment.avgScore}</TableCell>
                       <TableCell>{getStatusBadge(assessment.status || "active")}</TableCell>
                       <TableCell>{new Date(assessment.created_at).toLocaleDateString('vi-VN')}</TableCell>
                       <TableCell className="text-right">
