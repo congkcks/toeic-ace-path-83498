@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import StudyPlan from "./pages/StudyPlan";
 import Assessment from "./pages/Assessment";
@@ -24,6 +25,8 @@ import SpeakingChallengePage from "./pages/SpeakingChallengePage";
 import CoursesPage from "./pages/CoursesPage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import LessonDetailPage from "./pages/LessonDetailPage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,31 +37,35 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/study-plan" element={<StudyPlan />} />
-          <Route path="/assessment" element={<Assessment />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/lesson/reading" element={<ReadingLessonPage />} />
-          <Route path="/lesson/listening" element={<ListeningLessonPage />} />
-          <Route path="/lesson/writing" element={<WritingLessonPage />} />
-          <Route path="/lesson/conversation" element={<ConversationPracticePage />} />
-          <Route path="/ai-assessment" element={<AIAssessmentPage />} />
-          <Route path="/ai-analysis" element={<AIAnalysisPage />} />
-          <Route path="/detailed-lesson" element={<DetailedLessonPage />} />
-          <Route path="/all-interfaces" element={<AllInterfacesPage />} />
-          <Route path="/interactive-story" element={<InteractiveStoryPage />} />
-          <Route path="/vocabulary-builder" element={<VocabularyBuilderPage />} />
-          <Route path="/pronunciation-practice" element={<PronunciationPracticePage />} />
-          <Route path="/grammar-game" element={<GrammarGamePage />} />
-          <Route path="/speaking-challenge" element={<SpeakingChallengePage />} />
-          <Route path="/courses" element={<CoursesPage />} />
-          <Route path="/courses/:courseId" element={<CourseDetailPage />} />
-          <Route path="/lessons/:lessonId" element={<LessonDetailPage />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/study-plan" element={<StudyPlan />} />
+            <Route path="/assessment" element={<Assessment />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/lesson/reading" element={<ReadingLessonPage />} />
+            <Route path="/lesson/listening" element={<ListeningLessonPage />} />
+            <Route path="/lesson/writing" element={<WritingLessonPage />} />
+            <Route path="/lesson/conversation" element={<ConversationPracticePage />} />
+            <Route path="/ai-assessment" element={<AIAssessmentPage />} />
+            <Route path="/ai-analysis" element={<AIAnalysisPage />} />
+            <Route path="/detailed-lesson" element={<DetailedLessonPage />} />
+            <Route path="/all-interfaces" element={<AllInterfacesPage />} />
+            <Route path="/interactive-story" element={<InteractiveStoryPage />} />
+            <Route path="/vocabulary-builder" element={<VocabularyBuilderPage />} />
+            <Route path="/pronunciation-practice" element={<PronunciationPracticePage />} />
+            <Route path="/grammar-game" element={<GrammarGamePage />} />
+            <Route path="/speaking-challenge" element={<SpeakingChallengePage />} />
+            <Route path="/courses" element={<CoursesPage />} />
+            <Route path="/courses/:courseId" element={<CourseDetailPage />} />
+            <Route path="/lessons/:lessonId" element={<LessonDetailPage />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
