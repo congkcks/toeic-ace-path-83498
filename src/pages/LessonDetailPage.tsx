@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { courseApi } from "@/services/api";
+import { lessonApi } from "@/services/api";
 import type { LessonDetail, Exercise } from "@/types/course";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -29,13 +29,13 @@ const LessonDetailPage = () => {
       if (!lessonId) return;
       
       try {
-        const data = await courseApi.getLessonDetail(Number(lessonId));
+        const data = await lessonApi.getLessonDetail(Number(lessonId));
         setLesson(data);
         
         // Fetch theory after getting lesson details
         setTheoryLoading(true);
         try {
-          const theoryData = await courseApi.getLessonTheory(data.title);
+          const theoryData = await lessonApi.getLessonTheory(data.title);
           setLesson(prev => prev ? { ...prev, theory: theoryData.theory } : null);
         } catch (error) {
           console.error("Could not fetch theory:", error);
